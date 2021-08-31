@@ -3,14 +3,15 @@ Session 14 - DETR End-to-End Object Detection with Transformers
 
 ## Objective
 
-1. Take a look at this [post](https://opensourcelibs.com/lib/finetune-detr), which explains how to fine-tune DETR on a custom dataset. 
-2. Replicate the process and train the model yourself. [Everything](https://colab.research.google.com/github/woctezuma/finetune-detr/blob/master/finetune_detr.ipynb) is mentioned in the post. The objectives are:
-   1. to understand how fine-tuning works
-   2. to understand architectural related concepts of DETR
-   3. explains encoder-decoder architecture
-   4. explains bipartite loss, and why we need it
-   5. explains object queries
-   6. shows your results (your model on your dataset)
+1) Take a look at this [post](https://opensourcelibs.com/lib/finetune-detr), which explains how to fine-tune DETR on a custom dataset. 
+
+2) Replicate the process and train the model yourself. [Everything](https://colab.research.google.com/github/woctezuma/finetune-detr/blob/master/finetune_detr.ipynb) is mentioned in the post. The objectives are:
+   - to understand how fine-tuning works
+   - to understand architectural related concepts of DETR
+   - explains encoder-decoder architecture
+   - explains bipartite loss, and why we need it
+   - explains object queries
+   - shows your results (your model on your dataset)
 
 
 
@@ -18,9 +19,15 @@ Session 14 - DETR End-to-End Object Detection with Transformers
 
 The Detection Transformer was developed by the Facebook Research team and introduced in [[1]](http://arxiv.org/abs/1906.05909). DETR works by generating a **set** of features from an input image, and then using a transformer to predict the location (surrounding bounding box) of predefined number of objects as well as their respective class. Each component of the model is explained in detail below. 
 
+
+
 ![](https://github.com/gokul-pv/EVA6_Assignments_Session14/blob/main/Images/detr_1.png)
 
+
+
 The DETR model consists of a pretrained **CNN backbone**, which produces a set of lower dimensional set of features. These features are then scaled and added to a positional encoding, which is fed into a **Transformer** consisting of an **Encoder** and a **Decoder** in a manner quite similar to the Encoder-Decoder transformer described in [[2]](http://arxiv.org/abs/1706.03762). The output of the decoder is then fed into a fixed number of **Prediction Heads** which consist of a predefined number of feed forward networks. Each output of one of these prediction heads consists of a **class prediction**, as well as a predicted **bounding box**. The loss is calculated by computing the bipartite matching loss.
+
+
 
 > From the paper:
 >
@@ -34,11 +41,15 @@ The DETR model consists of a pretrained **CNN backbone**, which produces a set o
 
 ## CNN Backbone
 
+
+
 Assume that our input image is an RGB image with height H0, width W0 and 3 color channels. The CNN backbone consists of a (pretrained) CNN, which we use to generate C lower dimensional features having width W and height H (**In practice, we set C=2048, W=W0/32 and H=H0/32**). Let us assume 640x640x3 as the image size for our discussions. So, the backbone gives us a 20x20x2048 activation map.
 
 This leaves us with C two-dimensional features, and since we will be passing these features into a transformer, each feature must be reformatted in a way that will allow the encoder to process each feature as a sequence. This is done by flattening the feature matrices into an H x W vector, and then concattenating each one.
 
 The flattened convolutional features are added to a spatial positional encoding which can either be learned, or pre-defined.
+
+
 
 ![](https://github.com/gokul-pv/EVA6_Assignments_Session14/blob/main/Images/detr_2.png)
 
@@ -46,15 +57,23 @@ The flattened convolutional features are added to a spatial positional encoding 
 
 ## Transformer Architecture
 
+
+
 ![](https://github.com/gokul-pv/EVA6_Assignments_Session14/blob/main/Images/detr_3.png)
+
+
 
 **Encoder**
 
 The Encoder consists of N **Encoder Layers**. Each encoder layer consits of a Multi-Head Self-Attention Layer, an **Add & Norm** Layer, a Feed Forward Neural Network, and another **Add & Norm** layer. This is nearly identical to the original Transformer Encoder from [[2]](http://arxiv.org/abs/1706.03762) except we are only adding our spatial positional encoding to the Key and Queue matrices. Also note that we add the spatial encoding tho the Query matrix of the decoder after the decoder's first MHSA and Normalization layer. 
 
+
+
 **Decoder**
 
 The decoder is more complicated than the Encoder. The **object queries** consist of a set of N vectors which are added to the key and query matrices of the decoder. The output of the encoder and the spatial positional encoding is added to the key matrix (before the Multi-Head Attention layer). 
+
+
 
 **Object Queries**
 
@@ -62,13 +81,114 @@ These are N learnt positional embeddings passed in as inputs to the decoder. The
 
 After training when we plot the centroid of these 100 queries (20 out of 100), we see a pattern:
 
+
+
 ![](https://github.com/gokul-pv/EVA6_Assignments_Session14/blob/main/Images/ObjectQueries.png)
 
+
+
 From the above plot we can see that each of the object query is focusing on a particular region, like the first query is more focused to the bottom left of image and the next  query is looking at the middle part. Since the quarries can communicate with each other due to attention mechanism, each of them communicate with one another and focus on a particular region.These quarries are independent of the class. The decoder updates these embeddings through  multiple self-attention and encoder-decoder attention layers
+
+
 
 **Prediction Heads**
 
 The prediction heads consists of two Feed-Forward networks which compute class predictions and bounding boxes. Note that the number of predictions is equal to the number of object queries. An important thing to note here is that If there are less predictions than the number of object queries, then the outputted class will be **no object class**. Each prediction is a tuple containing class and bounding box (c,b).
 
 
+
+## Bipartite Matching Loss
+
+
+
+Let us assume that we have 2 objects in our image. We expand our ground  truth to 100 objects by added 98 no objects to be predicted. But here is the problem
+
+
+
+![](https://github.com/gokul-pv/EVA6_Assignments_Session14/blob/main/Images/Cows.jpg)
+
+
+
+We have the top 2 rows for 2 cows, but there is no guarantee that the top 2 in the prediction would be cows (as each query focuses on few  selected/learned areas). This is where **bipartite loss** comes into the picture. We compare our first Ground truth with all the predictions from the Predictions, and select the closest one (so that the loss is less):
+
+
+
+![](https://github.com/gokul-pv/EVA6_Assignments_Session14/blob/main/Images/loss_1.png)
+
+
+
+This is called **bipartite matching**. This can be found using the **Hungarian Algorithm**. By performing **one-to-one** matching, it is able to significantly reduce  low-quality predictions, and achieve eliminations of output reductions  like NMS. Overall the loss is defined as:
+
+
+
+![](https://github.com/gokul-pv/EVA6_Assignments_Session14/blob/main/Images/loss_2.png)
+
+
+
+i.e overall loss is the sum of class prediction loss and bounding box difference loss. The loss function for class label is negative log-likelihood. Bounding box loss is a linear combination of L1 loss and Generalized IoU loss to ensure loss is  scale-invariant since there could be small and big boxes.
+
+
+
+## Fine-Tune DETR
+
+Here we are going to fine-tune Facebook's DETR (DEtection TRansformer) on balloon dataset (custom dataset).The goal is to detec balloons.
+
+## Dataset
+
+The dataset can be found [here](https://github.com/matterport/Mask_RCNN/tree/master/samples/balloon). The balloon dataset is in VIA annotation format. However, DETR expects them to be in COCO format. The following [Github repo](https://github.com/woctezuma/VIA2COCO) is used to convert annotations from VIA format to COCO format.
+
+There are 61 images in the training set, and 13 images in the validation set.The directory structure would be as following:
+
+```
+path/to/coco/
+├ annotations/  # JSON annotations
+│  ├ annotations/custom_train.json
+│  └ annotations/custom_val.json
+├ train2017/    # training images
+└ val2017/      # validation images
+```
+
+## 
+
+## Training
+
+Model was trained for 200 epochs and the link to the notebook can be found [here](https://github.com/gokul-pv/EVA6_Assignments_Session14/blob/main/EVA6_Session_14_detr_finetune.ipynb)
+
+
+
+## Results
+
+Metrics to monitor the training include:
+
+- the Average Precision (AP), which is the primary challenge metric for the COCO dataset
+
+![](https://github.com/gokul-pv/EVA6_Assignments_Session14/blob/main/Images/result_1.png)
+
+- losses (total loss, classification loss, L1 bbox distance loss, GIoU loss)
+
+![](https://github.com/gokul-pv/EVA6_Assignments_Session14/blob/main/Images/result_2.png)
+
+- errors (cardinality error, class error)
+
+![](https://github.com/gokul-pv/EVA6_Assignments_Session14/blob/main/Images/result_3.png)
+
+
+
+## Predictions on Test Data
+
+
+
+| ![](https://github.com/gokul-pv/EVA6_Assignments_Session14/blob/main/Images/result_4.png) |
+| :----------------------------------------------------------: |
+| ![](https://github.com/gokul-pv/EVA6_Assignments_Session14/blob/main/Images/result_5.png) |
+
+
+
+## Reference
+
+- [https://ai.facebook.com/research/publications/end-to-end-object-detection-with-transformers](https://ai.facebook.com/research/publications/end-to-end-object-detection-with-transformers)
+
+- [https://github.com/woctezuma/finetune-detr](https://github.com/woctezuma/finetune-detr)
+
+  
 
