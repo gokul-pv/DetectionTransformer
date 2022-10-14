@@ -1,17 +1,16 @@
-# EVA6_Assignments_Session14
-Session 14 - DETR End-to-End Object Detection with Transformers
+# DETR End-to-End Object Detection with Transformers
 
 ## Objective
 
 1) Take a look at this [post](https://opensourcelibs.com/lib/finetune-detr), which explains how to fine-tune DETR on a custom dataset. 
 
-2) Replicate the process and train the model yourself. [Everything](https://colab.research.google.com/github/woctezuma/finetune-detr/blob/master/finetune_detr.ipynb) is mentioned in the post. The objectives are:
+2) Train the model. [Everything](https://colab.research.google.com/github/woctezuma/finetune-detr/blob/master/finetune_detr.ipynb) is mentioned in the post. The objectives are:
    - to understand how fine-tuning works
    - to understand architectural related concepts of DETR
    - explains encoder-decoder architecture
    - explains bipartite loss, and why we need it
    - explains object queries
-   - shows your results (your model on your dataset)
+   - show the results
 
 
 
@@ -21,7 +20,7 @@ The Detection Transformer was developed by the Facebook Research team and introd
 
 
 
-![](https://github.com/gokul-pv/EVA6_Assignments_Session14/blob/main/Images/detr_1.png)
+![](https://github.com/gokul-pv/DetectionTransformer/blob/main/Images/detr_1.png)
 
 
 
@@ -51,7 +50,7 @@ The flattened convolutional features are added to a spatial positional encoding 
 
 
 
-![](https://github.com/gokul-pv/EVA6_Assignments_Session14/blob/main/Images/detr_2.png)
+![](https://github.com/gokul-pv/DetectionTransformer/blob/main/Images/detr_2.png)
 
 
 
@@ -59,7 +58,7 @@ The flattened convolutional features are added to a spatial positional encoding 
 
 
 
-![](https://github.com/gokul-pv/EVA6_Assignments_Session14/blob/main/Images/detr_3.png)
+![](https://github.com/gokul-pv/DetectionTransformer/blob/main/Images/detr_3.png)
 
 
 
@@ -83,7 +82,7 @@ After training when we plot the centroid of these 100 queries (20 out of 100), w
 
 
 
-![](https://github.com/gokul-pv/EVA6_Assignments_Session14/blob/main/Images/ObjectQueries.png)
+![](https://github.com/gokul-pv/DetectionTransformer/blob/main/Images/ObjectQueries.png)
 
 
 
@@ -105,7 +104,7 @@ Let us assume that we have 2 objects in our image. We expand our ground  truth t
 
 
 
-![](https://github.com/gokul-pv/EVA6_Assignments_Session14/blob/main/Images/Cows.jpg)
+![](https://github.com/gokul-pv/DetectionTransformer/blob/main/Images/Cows.jpg)
 
 
 
@@ -113,7 +112,7 @@ We have the top 2 rows for 2 cows, but there is no guarantee that the top 2 in t
 
 
 
-![](https://github.com/gokul-pv/EVA6_Assignments_Session14/blob/main/Images/loss_1.png)
+![](https://github.com/gokul-pv/DetectionTransformer/blob/main/Images/loss_1.png)
 
 
 
@@ -121,7 +120,7 @@ This is called **bipartite matching**. This can be found using the **Hungarian A
 
 
 
-![](https://github.com/gokul-pv/EVA6_Assignments_Session14/blob/main/Images/loss_2.png)
+![](https://github.com/gokul-pv/DetectionTransformer/blob/main/Images/loss_2.png)
 
 
 
@@ -152,7 +151,7 @@ path/to/coco/
 
 ## Training
 
-Model was trained for 200 epochs and the link to the notebook can be found [here](https://github.com/gokul-pv/EVA6_Assignments_Session14/blob/main/EVA6_Session_14_detr_finetune.ipynb)
+Model was trained for 200 epochs and the link to the notebook can be found [here](https://github.com/gokul-pv/DetectionTransformer/blob/main/DETR_finetune.ipynb)
 
 
 
@@ -162,15 +161,15 @@ Metrics to monitor the training include:
 
 - the Average Precision (AP), which is the primary challenge metric for the COCO dataset
 
-![](https://github.com/gokul-pv/EVA6_Assignments_Session14/blob/main/Images/result_1.png)
+![](https://github.com/gokul-pv/DetectionTransformer/blob/main/Images/result_1.png)
 
 - losses (total loss, classification loss, L1 bbox distance loss, GIoU loss)
 
-![](https://github.com/gokul-pv/EVA6_Assignments_Session14/blob/main/Images/result_2.png)
+![](https://github.com/gokul-pv/DetectionTransformer/blob/main/Images/result_2.png)
 
 - errors (cardinality error, class error)
 
-![](https://github.com/gokul-pv/EVA6_Assignments_Session14/blob/main/Images/result_3.png)
+![](https://github.com/gokul-pv/DetectionTransformer/blob/main/Images/result_3.png)
 
 
 
@@ -178,9 +177,9 @@ Metrics to monitor the training include:
 
 
 
-| ![](https://github.com/gokul-pv/EVA6_Assignments_Session14/blob/main/Images/result_4.png) |
+| ![](https://github.com/gokul-pv/DetectionTransformer/blob/main/Images/result_4.png) |
 | :----------------------------------------------------------: |
-| ![](https://github.com/gokul-pv/EVA6_Assignments_Session14/blob/main/Images/result_5.png) |
+| ![](https://github.com/gokul-pv/DetectionTransformer/blob/main/Images/result_5.png) |
 
 
 
